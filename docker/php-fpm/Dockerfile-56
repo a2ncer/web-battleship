@@ -1,0 +1,184 @@
+#
+#--------------------------------------------------------------------------
+# Image Setup
+#--------------------------------------------------------------------------
+#
+# To edit the 'php-fpm' base Image, visit its repository on Github
+#    https://github.com/LaraDock/php-fpm
+#
+# To change its version, see the available Tags on the Docker Hub:
+#    https://hub.docker.com/r/laradock/php-fpm/tags/
+#
+
+FROM laradock/php-fpm:5.6--1.2
+
+MAINTAINER Mahmoud Zalt <mahmoud@zalt.me>
+
+#
+#--------------------------------------------------------------------------
+# Mandatory Software's Installation
+#--------------------------------------------------------------------------
+#
+# Mandatory Software's such as ("mcrypt", "pdo_mysql", "libssl-dev", ....)
+# are installed on the base image 'laradock/php-fpm' image. If you want
+# to add more Software's or remove existing one, you need to edit the
+# base image (https://github.com/LaraDock/php-fpm).
+#
+
+#
+#--------------------------------------------------------------------------
+# Optional Software's Installation
+#--------------------------------------------------------------------------
+#
+# Optional Software's will only be installed if you set them to `true`
+# in the `docker-compose.yml` before the build.
+# Example:
+#   - INSTALL_ZIP_ARCHIVE=true
+#
+
+#####################################
+# xDebug:
+#####################################
+
+ARG INSTALL_XDEBUG=false
+RUN if [ ${INSTALL_XDEBUG} = true ]; then \
+    # Install the xdebug extension
+    pecl install xdebug && \
+    docker-php-ext-enable xdebug \
+;fi
+
+# Copy xdebug configration for remote debugging
+COPY ./xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
+
+
+#####################################
+# MongoDB:
+#####################################
+
+ARG INSTALL_MONGO=false
+RUN if [ ${INSTALL_MONGO} = true ]; then \
+    # Install the mongodb extension
+    pecl install mongodb && \
+    docker-php-ext-enable mongodb \
+;fi
+
+#####################################
+# INSTALL_PHANTOMJS_SUPPORT:
+#####################################
+
+ARG INSTALL_PHANTOMJS_SUPPORT=false
+RUN if [ ${INSTALL_PHANTOMJS_SUPPORT} = true ]; then \
+    apt-get install -y --force-yes libfontconfig \
+;fi
+
+#####################################
+# ZipArchive:
+#####################################
+
+ARG INSTALL_ZIP_ARCHIVE=false
+RUN if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
+    # Install the zip extension
+    pecl install zip && \
+    docker-php-ext-enable zip \
+;fi
+
+#####################################
+# PHP Memcached:
+#####################################
+
+ARG INSTALL_MEMCACHED=false
+RUN if [ ${INSTALL_MEMCACHED} = true ]; then \
+    # Install the php memcached extension
+    pecl install memcached && \
+    docker-php-ext-enable memcached \
+;fi
+
+#####################################
+# PHP Aerospike:
+#####################################
+
+ARG INSTALL_AEROSPIKE_EXTENSION=false
+ENV INSTALL_AEROSPIKE_EXTENSION ${INSTALL_AEROSPIKE_EXTENSION}
+# Copy aerospike configration for remote debugging
+COPY ./aerospike.ini /usr/local/etc/php/conf.d/aerospike.ini
+RUN if [ ${INSTALL_AEROSPIKE_EXTENSION} = true ]; then \
+    # Install the php aerospike extension
+    curl -L -o /tmp/aerospike-client-php.tar.gz "https://github.com/luciano-jr/aerospike-client-php/archive/master.tar.gz" \
+    && mkdir -p aerospike-client-php \
+    && tar -C aerospike-client-php -zxvf /tmp/aerospike-client-php.tar.gz --strip 1 \
+    && ( \
+        cd aerospike-client-php/src/aerospike \
+        && phpize \
+        && ./build.sh \
+        && make install \
+    ) \
+    && rm /tmp/aerospike-client-php.tar.gz \
+;fi
+
+#####################################
+# Opcache:
+#####################################
+
+ARG INSTALL_OPCACHE=false
+RUN if [ ${INSTALL_OPCACHE} = true ]; then \
+    docker-php-ext-install opcache && \
+    docker-php-ext-enable opcache \
+;fi
+
+# Copy opcache configration
+COPY ./opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+
+#####################################
+# Codeigniter Modifications:
+#####################################
+
+ARG CODEIGNITER=false
+RUN if [ ${CODEIGNITER} = true ]; then \
+    # Install Codeigniter PHP extentions requirements
+     docker-php-ext-install mysqli && \
+     docker-php-ext-install tokenizer \
+;fi
+
+#ARG INSTALL_ANSIBLE=false
+#RUN if [ ${INSTALL_ANSIBLE} = true ]; then \
+#    # Install the ansible extension
+#    apt-get update && \
+#    apt-get install -y software-properties-common && \
+#    apt-get install -y python-software-properties && \
+#    #apt-add-repository -y ppa:ansible/ansible && \
+#    apt-get update && \
+#    apt-get install -y ansible \
+#;fi
+
+#
+#--------------------------------------------------------------------------
+# Final Touch
+#--------------------------------------------------------------------------
+#
+
+#RUN apt-get -y update && \
+#    apt-get install -y python-yaml python-jinja2 python-httplib2 python-keyczar python-paramiko python-setuptools python-pkg-resources git python-pip
+#RUN mkdir /etc/ansible/
+#RUN echo '[local]\nlocalhost\n' > /etc/ansible/hosts
+#RUN mkdir /opt/ansible/
+#RUN git clone http://github.com/ansible/ansible.git /opt/ansible/ansible
+#WORKDIR /opt/ansible/ansible
+#RUN git submodule update --init
+#ENV PATH /opt/ansible/ansible/bin:/bin:/usr/bin:/sbin:/usr/sbin:$PATH
+#ENV PYTHONPATH /opt/ansible/ansible/lib
+#ENV ANSIBLE_LIBRARY /opt/ansible/ansible/library
+
+ADD ./laravel.ini /usr/local/etc/php/conf.d
+ADD ./laravel.pool.conf /usr/local/etc/php-fpm.d/
+
+
+
+RUN rm -r /var/lib/apt/lists/*
+
+RUN usermod -u 1000 www-data
+
+WORKDIR /var/www
+
+CMD ["php-fpm"]
+
+EXPOSE 9000

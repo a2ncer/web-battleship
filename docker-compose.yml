@@ -1,0 +1,93 @@
+version: '2'
+
+services:
+
+### Applications Code Container #############################
+
+    applications:
+        image: tianon/true
+        volumes:
+            - ./:/var/www
+
+### Workspace Utilities Container ###########################
+
+    workspace:
+        build:
+            context: ./docker/workspace
+            args:
+                - INSTALL_XDEBUG=${INSTALL_XDEBUG}
+                - PUID=1000
+                - PGID=1000
+                - TZ=UTC
+        volumes_from:
+            - applications
+        extra_hosts:
+            - "dockerhost:${DOCKER_HOST_IP}"
+        environment:
+            - PHP_IDE_CONFIG=serverName=${APP_DOMAIN}
+        tty: true
+        links:
+           - mongo
+        restart: always
+
+### PHP-FPM Container #######################################
+
+    php-fpm:
+        build:
+            context: ./docker/php-fpm
+            args:
+                - INSTALL_XDEBUG=${INSTALL_XDEBUG}
+            dockerfile: Dockerfile-70
+        volumes_from:
+            - applications
+        expose:
+            - "9000"
+        links:
+            - workspace
+            - mongo
+        environment:
+            - PHP_IDE_CONFIG=serverName=${APP_DOMAIN}
+        external_links:
+            - nginx:${APP_DOMAIN}
+        restart: always
+
+
+### MongoDB Container #######################################
+
+    mongo:
+        build: ./docker/mongo
+        volumes_from:
+            - applications
+        ports:
+            - "13756:13756"
+        volumes:
+            - mongo:/data/db
+        command: --port 13756
+
+
+### Nginx Server Container ##################################
+
+    nginx:
+        build:
+            context: ./docker/nginx
+        volumes_from:
+            - applications
+        volumes:
+            - ./docker/logs/nginx/:/var/log/nginx
+        environment:
+            - PHP_UPSTREAM=php-fpm
+        ports:
+            - "80:80"
+            - "443:443"
+            - "3000:3000"
+        links:
+            - php-fpm
+        restart: always
+
+
+### Volumes Setup ###########################################
+
+volumes:
+    mongo:
+        driver: "local"
+
