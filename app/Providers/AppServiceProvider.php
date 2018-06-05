@@ -2,7 +2,8 @@
 
 namespace App\Providers;
 
-use App\Models\Game;
+
+use App\Services\DTO\Point;
 use App\Services\DTO\Ship;
 
 use App\Services\GameService;
@@ -31,6 +32,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(Ship::class, function($app){
 
             return (new Ship())->map($app->request);
+
+        });
+
+        $this->app->bind(Point::class, function($app){
+
+            return (new Point())->map($app->request);
 
         });
 

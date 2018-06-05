@@ -2,10 +2,18 @@
 
 namespace App\Models;
 
+use App\Services\DTO\Point;
+use App\Services\DTO\Ship;
 use Illuminate\Database\Eloquent\Model;
 
 class Game extends Model
 {
+
+    public function getId()
+    {
+        return $this->id;
+    }
+
     /**
      * @param $owner_session_id
      *
@@ -48,6 +56,21 @@ class Game extends Model
         return null;
     }
 
+    public function getReversedSenderType($sessionId)
+    {
+        if ($this->getOwnerSessionId() === $sessionId) {
+            return 'OPPONENT';
+        }
+
+        if ($this->getOpponentSessionId() === $sessionId) {
+            return 'OWNER';
+        }
+
+        return null;
+    }
+
+
+
     /**
      * @param $sessionId
      *
@@ -65,4 +88,28 @@ class Game extends Model
 
         return $moves;
     }
+
+
+    public function saveMove($event, $sessionId, Point $point)
+    {
+       (new Move())
+            ->setEvent($event)
+            ->setGameId($this->getId())
+            ->setSender($this->getSenderType($sessionId))
+            ->setX($point->getX())
+            ->setY($point->getY())
+            ->save();
+    }
+
+
+    public function saveShip($sessionId, Ship $ship)
+    {
+        /** @var Point $point */
+        foreach ($ship->getCoordinates() as $point) {
+            $this->saveMove("SHIP", $sessionId, $point);
+
+        }
+    }
+
+
 }

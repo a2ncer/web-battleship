@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Game;
 use App\Models\Move;
 use App\Services\DTO\Board;
+use App\Services\DTO\Point;
 use App\Services\DTO\Ship;
 
 class GameService
@@ -39,12 +40,16 @@ class GameService
     }
 
 
+    /**
+     * @param Game $game
+     * @return bool
+     */
     public function joinGame(Game $game)
     {
-        if($game->getOpponentSessionId()===$this->sessionId)
+        if ($game->getOpponentSessionId() === $this->sessionId)
             return true;
 
-        if($game->getOpponentSessionId()===null) {
+        if ($game->getOpponentSessionId() === null && $game->getOpponentSessionId() !== $this->sessionId) {
             $game->setOpponentSessionId($this->sessionId);
             return $game->update();
         }
@@ -57,12 +62,33 @@ class GameService
      * @param Game $game
      * @return Board
      */
-    public function getBoard(Game $game)
+    public function getSessionBoard(Game $game)
     {
-        $moves = $game->getMoves($this->sessionId)->get();
+        $senderType = $game->getSenderType($this->sessionId);
+
+        $reversedSenderType = $game->getReversedSenderType($this->sessionId);
+
+        $moves = $game->getMoves()
+            ->where(["event", "=", "SHIP"], ["sender", "=", $senderType])
+            ->orWhere(["event", "=", "HIT"], ["sender", "=", $reversedSenderType])
+            ->get();
 
         return (new Board())->map($moves);
 
+    }
+
+    public function getOpponentBoard(Game $game)
+    {
+        $senderType = $game->getSenderType($this->sessionId);
+
+        $reversedSenderType = $game->getReversedSenderType($this->sessionId);
+
+        $moves = $game->getMoves()
+            ->where(["event", "=", "SHIP"], ["sender", "=", $reversedSenderType])
+            ->orWhere(["event", "=", "HIT"], ["sender", "=", $senderType])
+            ->get();
+
+        return (new Board())->map($moves);
     }
 
     /**
@@ -72,18 +98,20 @@ class GameService
      */
     public function addShip(Game $game, Ship $ship)
     {
-        $board = $this->getBoard($game)->addShip($ship);
+        $board = $this->getSessionBoard($game)->addShip($ship);
 
-        $move = new Move;
-
-        $move->addState($board);
-
-
-        $move->save();
-
+        $game->saveShip($this->sessionId, $ship);
 
         return $board;
     }
+
+    public function attack(Game $game, Point $point)
+    {
+        $status = $this->getOpponentBoard($game)->attack($point);
+
+        return $status;
+    }
+
 
 
 

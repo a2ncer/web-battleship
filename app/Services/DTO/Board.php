@@ -52,19 +52,28 @@ class Board
         return $this;
     }
 
+    public function attack(Point $point)
+    {
+        return true;
+    }
+
+
+
     public function addShip(Ship $ship)
     {
+
         if (isset($this->board[$ship->getStartX()][$ship->getStartY()])) {
             if ($this->board[$ship->getStartX()][$ship->getStartY()] === 0) {
+
                 $shipMap = $this->tryAddShip($ship);
 
                 if ($shipMap) {
-                    $this->board = array_replace($this->board, $shipMap);
+                   $this->board = array_replace($this->board,$shipMap);
                 } else {
                     dd('can not add ship');
                 }
             } else {
-                dd('This cell is not free');
+                dd('The start cell is not free');
             }
         } else {
             dd('Out of range');
@@ -77,53 +86,23 @@ class Board
     {
         $result = $this->getClearBoard();
 
-        $x = $ship->getStartX();
-        $y = $ship->getStartY();
         $size = $ship->getSize();
 
         if ($size > $this->dimension || $size < 0) {
             return false;
         }
 
-        if ($ship->getDirection() === 'up') {
-            for ($y1 = $y; $y1 > $y - $size; --$y1) {
-                if (isset($this->board[$y1][$x]) && $this->board[$y1][$x] === 0) {
-                    $result[$y1][$x] = 1;
-                } else {
-                    return false;
-                }
+        /** @var Point $point */
+        foreach ($ship->getCoordinates() as $point)
+        {
+            $x = $point->getX();
+            $y = $point->getY();
+
+            if (isset($this->board[$y][$x]) && $this->board[$y][$x] === 0) {
+                $result[$y][$x] = 1;
             }
         }
 
-        if ($ship->getDirection() === 'down') {
-            for ($y1 = $y; $y1 < $y + $size; ++$y1) {
-                if (isset($this->board[$y1][$x]) && $this->board[$y1][$x] === 0) {
-                    $result[$y1][$x] = 1;
-                } else {
-                    return false;
-                }
-            }
-        }
-
-        if ($ship->getDirection() === 'left') {
-            for ($x1 = $x; $x1 > $x - $size; --$x1) {
-                if (isset($this->board[$y][$x1]) && $this->board[$y][$x1] === 0) {
-                    $result[$y][$x1] = 1;
-                } else {
-                    return false;
-                }
-            }
-        }
-
-        if ($ship->getDirection() === 'right') {
-            for ($x1 = $x; $x1 < $x + $size; ++$x1) {
-                if (isset($this->board[$y][$x1]) && $this->board[$y][$x1] === 0) {
-                    $result[$y][$x1] = 1;
-                } else {
-                    return false;
-                }
-            }
-        }
 
         return $result;
     }

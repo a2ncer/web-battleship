@@ -30,7 +30,7 @@ Route::group(['prefix' => 'game'], function () {
 
     Route::post('/{game}/board/addShip', 'BoardController@addShip');
 
-    Route::post('/{game}/board/hit', 'BoardController@hit');
+    Route::post('/{game}/board/attack', 'BoardController@attack');
 
 
 });
