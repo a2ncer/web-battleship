@@ -13,6 +13,27 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('api')->get('/session', function (Request $request) {
+    return $request->session()->getId();
 });
+
+Route::group(['prefix' => 'game'], function () {
+
+
+    Route::get('/{game}', 'GameController@show');
+
+    Route::post('/create', 'GameController@create');
+
+    Route::patch('/{game}/join', 'GameController@join');
+
+    //Route::get('/{game}/updates', 'GameController@show');
+
+    Route::post('/{game}/board/addShip', 'BoardController@addShip');
+
+    Route::post('/{game}/board/hit', 'BoardController@hit');
+
+
+});
+
+
+

@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Game;
+use App\Services\DTO\Ship;
+
+use App\Services\GameService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -24,5 +28,17 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         //
+        $this->app->bind(Ship::class, function($app){
+
+            return (new Ship())->map($app->request);
+
+        });
+
+        $this->app->bind(GameService::class, function ($app){
+
+            return (new GameService())->session($app->request->session()->getId());
+
+        });
+
     }
 }

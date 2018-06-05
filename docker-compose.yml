@@ -27,7 +27,7 @@ services:
             - PHP_IDE_CONFIG=serverName=${APP_DOMAIN}
         tty: true
         links:
-           - mongo
+           - mysql
         restart: always
 
 ### PHP-FPM Container #######################################
@@ -44,7 +44,7 @@ services:
             - "9000"
         links:
             - workspace
-            - mongo
+            - mysql
         environment:
             - PHP_IDE_CONFIG=serverName=${APP_DOMAIN}
         external_links:
@@ -52,17 +52,21 @@ services:
         restart: always
 
 
-### MongoDB Container #######################################
+### MySQL Container #########################################
 
-    mongo:
-        build: ./docker/mongo
-        volumes_from:
-            - applications
-        ports:
-            - "13756:13756"
+    mysql:
+        build:
+            context: ./docker/mysql
+            args:
+                - MYSQL_DATABASE=${DB_DATABASE}
+                - MYSQL_USER=${DB_USERNAME}
+                - MYSQL_PASSWORD=${DB_PASSWORD}
+                - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
         volumes:
-            - mongo:/data/db
-        command: --port 13756
+            - mysql:/var/lib/mysql
+        ports:
+            - "3306:3306"
+        restart: always
 
 
 ### Nginx Server Container ##################################
@@ -88,6 +92,6 @@ services:
 ### Volumes Setup ###########################################
 
 volumes:
-    mongo:
+    mysql:
         driver: "local"
 
