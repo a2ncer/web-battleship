@@ -2,7 +2,10 @@
 
 namespace App\Services\DTO;
 
+use App\Services\Enums\CellType;
+use App\Services\Enums\MoveType;
 use Illuminate\Support\Collection;
+use Mockery\Exception;
 
 class Board
 {
@@ -20,19 +23,25 @@ class Board
         $this->board = $this->getClearBoard();
     }
 
+    /**
+     * @return array
+     */
     private function getClearBoard()
     {
         $board = [];
 
         for ($y = 0; $y < $this->dimension; ++$y) {
             for ($x = 0; $x < $this->dimension; ++$x) {
-                $board[$y][$x] = 0;
+                $board[$y][$x] = CellType::FREE;
             }
         }
 
         return $board;
     }
 
+    /**
+     * @return array
+     */
     public function getBoard()
     {
         return $this->board;
@@ -46,45 +55,100 @@ class Board
     public function map(Collection $moves)
     {
         foreach ($moves as $record) {
-            $this->board[$record->getX()][$record->getY()] = $record->getEvent();
+            $y = $record->getY();
+            $x = $record->getX();
+
+            $value = $this->board[$y][$x];
+
+            $status = $this->convertEventToCell($value, $record->getEvent());
+
+            $this->board[$y][$x] = $status;
         }
 
         return $this;
     }
 
-    public function attack(Point $point)
+    /**
+     * @param $value
+     * @param $event
+     *
+     * @return string
+     */
+    public function convertEventToCell($value, $event)
     {
-        return true;
+        if ($value === CellType::SHIP && $event === MoveType::ATTACK) {
+            return CellType::HIT;
+        }
+
+        if ($value === 0 && $event === MoveType::ATTACK) {
+            return CellType::MISS;
+        }
+
+        if ($value === 0 && $event === MoveType::ADD_SHIP) {
+            return CellType::SHIP;
+        }
+
+        throw new Exception('Map recreate error');
     }
 
+    /**
+     * @param Point $point
+     *
+     * @return bool
+     */
+    public function attack(Point $point)
+    {
+        $y = $point->getY();
+        $x = $point->getX();
 
+        if (isset($this->board[$y][$x])) {
+            $value = $this->board[$y][$x];
+            $status = $this->convertEventToCell($value, MoveType::ATTACK);
 
+            $this->board[$y][$x] = $status;
+
+            if ($status === CellType::HIT) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param Ship $ship
+     *
+     * @return $this
+     */
     public function addShip(Ship $ship)
     {
-
-        if (isset($this->board[$ship->getStartX()][$ship->getStartY()])) {
-            if ($this->board[$ship->getStartX()][$ship->getStartY()] === 0) {
-
+        if (isset($this->board[$ship->getStartY()][$ship->getStartX()])) {
+            if ($this->board[$ship->getStartY()][$ship->getStartX()] === CellType::FREE) {
                 $shipMap = $this->tryAddShip($ship);
 
                 if ($shipMap) {
-                   $this->board = array_replace($this->board,$shipMap);
+                    $this->board = array_replace($this->board, $shipMap);
                 } else {
-                    dd('can not add ship');
+                    throw new Exception('You can not add a ship');
                 }
             } else {
-                dd('The start cell is not free');
+                throw new Exception('The start cell is occupied');
             }
         } else {
-            dd('Out of range');
+            throw new Exception('Out of range');
         }
 
         return $this;
     }
 
+    /**
+     * @param Ship $ship
+     *
+     * @return array|bool
+     */
     private function tryAddShip(Ship $ship)
     {
-        $result = $this->getClearBoard();
+        $result = $this->board;
 
         $size = $ship->getSize();
 
@@ -93,16 +157,14 @@ class Board
         }
 
         /** @var Point $point */
-        foreach ($ship->getCoordinates() as $point)
-        {
-            $x = $point->getX();
+        foreach ($ship->getCoordinates() as $point) {
             $y = $point->getY();
+            $x = $point->getX();
 
-            if (isset($this->board[$y][$x]) && $this->board[$y][$x] === 0) {
-                $result[$y][$x] = 1;
+            if (isset($this->board[$y][$x]) && $this->board[$y][$x] === CellType::FREE) {
+                $result[$y][$x] = CellType::SHIP;
             }
         }
-
 
         return $result;
     }

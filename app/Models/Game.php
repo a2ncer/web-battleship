@@ -4,7 +4,10 @@ namespace App\Models;
 
 use App\Services\DTO\Point;
 use App\Services\DTO\Ship;
+use App\Services\Enums\MoveType;
+use App\Services\Enums\SenderType;
 use Illuminate\Database\Eloquent\Model;
+use Mockery\Exception;
 
 class Game extends Model
 {
@@ -26,11 +29,18 @@ class Game extends Model
         return $this;
     }
 
+    /**
+     * @return mixed
+     */
     public function getOwnerSessionId()
     {
         return $this->owner_session_id;
     }
 
+    /**
+     * @param $opponent_session_id
+     * @return $this
+     */
     public function setOpponentSessionId($opponent_session_id)
     {
         $this->opponent_session_id = $opponent_session_id;
@@ -38,38 +48,50 @@ class Game extends Model
         return $this;
     }
 
+    /**
+     * @return mixed
+     */
     public function getOpponentSessionId()
     {
         return $this->opponent_session_id;
     }
 
+    /**
+     * @param $sessionId
+     * @return null|string
+     */
     public function getSenderType($sessionId)
     {
+        if($sessionId===null)
+            return null;
+
         if ($this->getOwnerSessionId() === $sessionId) {
-            return 'OWNER';
+            return SenderType::OWNER;
         }
 
         if ($this->getOpponentSessionId() === $sessionId) {
-            return 'OPPONENT';
+            return SenderType::OPPONENT;
         }
 
         return null;
     }
 
+    /**
+     * @param $sessionId
+     * @return null|string
+     */
     public function getReversedSenderType($sessionId)
     {
         if ($this->getOwnerSessionId() === $sessionId) {
-            return 'OPPONENT';
+            return SenderType::OPPONENT;
         }
 
         if ($this->getOpponentSessionId() === $sessionId) {
-            return 'OWNER';
+            return SenderType::OWNER;
         }
 
         return null;
     }
-
-
 
     /**
      * @param $sessionId
@@ -90,6 +112,11 @@ class Game extends Model
     }
 
 
+    /**
+     * @param $event
+     * @param $sessionId
+     * @param Point $point
+     */
     public function saveMove($event, $sessionId, Point $point)
     {
        (new Move())
@@ -102,12 +129,43 @@ class Game extends Model
     }
 
 
+    /**
+     * @param $sessionId
+     * @param Ship $ship
+     */
     public function saveShip($sessionId, Ship $ship)
     {
         /** @var Point $point */
         foreach ($ship->getCoordinates() as $point) {
-            $this->saveMove("SHIP", $sessionId, $point);
+            $this->saveMove(MoveType::ADD_SHIP, $sessionId, $point);
 
+        }
+    }
+
+
+    /**
+     * @param $sessionId
+     * @param Point $point
+     */
+    public function saveAttack($sessionId, Point $point)
+    {
+        /** @var Move $move */
+        $move = $this->getMoves($sessionId)->get()->last();
+        $opponent = $this->getReversedSenderType($sessionId);
+
+        if($move) {
+
+            if($move->getSender() === $opponent) {
+
+                $this->saveMove(MoveType::ATTACK, $sessionId, $point);
+            }
+            else {
+                throw new Exception("Wait for your opponent turn");
+            }
+
+        }
+        else {
+            throw new Exception("Can't attack - no moves found");
         }
     }
 

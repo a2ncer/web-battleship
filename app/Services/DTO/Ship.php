@@ -28,6 +28,7 @@ class Ship
         return $this;
     }
 
+
     private function generateCoordinates()
     {
         if ($this->getDirection() === 'up') {

@@ -3,19 +3,21 @@
 namespace App\Services;
 
 use App\Models\Game;
-use App\Models\Move;
 use App\Services\DTO\Board;
 use App\Services\DTO\Point;
 use App\Services\DTO\Ship;
+use App\Services\Enums\MoveType;
 
 class GameService
 {
-
+    /**
+     * @var string
+     */
     private $sessionId;
-
 
     /**
      * @param string $sessionId
+     *
      * @return $this
      */
     public function session($sessionId)
@@ -26,7 +28,8 @@ class GameService
     }
 
     /**
-     * Creates and return new game
+     * Creates and return new game.
+     *
      * @return Game
      */
     public function createGame()
@@ -39,27 +42,29 @@ class GameService
         return $game;
     }
 
-
     /**
      * @param Game $game
+     *
      * @return bool
      */
     public function joinGame(Game $game)
     {
-        if ($game->getOpponentSessionId() === $this->sessionId)
+        if ($game->getOpponentSessionId() === $this->sessionId) {
             return true;
+        }
 
         if ($game->getOpponentSessionId() === null && $game->getOpponentSessionId() !== $this->sessionId) {
             $game->setOpponentSessionId($this->sessionId);
+
             return $game->update();
         }
 
         return false;
     }
 
-
     /**
      * @param Game $game
+     *
      * @return Board
      */
     public function getSessionBoard(Game $game)
@@ -69,14 +74,18 @@ class GameService
         $reversedSenderType = $game->getReversedSenderType($this->sessionId);
 
         $moves = $game->getMoves()
-            ->where(["event", "=", "SHIP"], ["sender", "=", $senderType])
-            ->orWhere(["event", "=", "HIT"], ["sender", "=", $reversedSenderType])
+            ->where([['event', '=', MoveType::ADD_SHIP], ['sender', '=', $senderType]])
+            ->orWhere([['event', '=', MoveType::ATTACK], ['sender', '=', $reversedSenderType]])
             ->get();
 
         return (new Board())->map($moves);
-
     }
 
+    /**
+     * @param Game $game
+     *
+     * @return Board
+     */
     public function getOpponentBoard(Game $game)
     {
         $senderType = $game->getSenderType($this->sessionId);
@@ -84,8 +93,8 @@ class GameService
         $reversedSenderType = $game->getReversedSenderType($this->sessionId);
 
         $moves = $game->getMoves()
-            ->where(["event", "=", "SHIP"], ["sender", "=", $reversedSenderType])
-            ->orWhere(["event", "=", "HIT"], ["sender", "=", $senderType])
+            ->where([['event', '=', MoveType::ADD_SHIP], ['sender', '=', $reversedSenderType]])
+            ->orWhere([['event', '=', MoveType::ATTACK], ['sender', '=', $senderType]])
             ->get();
 
         return (new Board())->map($moves);
@@ -94,6 +103,7 @@ class GameService
     /**
      * @param Game $game
      * @param Ship $ship
+     *
      * @return Board
      */
     public function addShip(Game $game, Ship $ship)
@@ -105,14 +115,20 @@ class GameService
         return $board;
     }
 
+    /**
+     * @param Game  $game
+     * @param Point $point
+     *
+     * @return bool
+     */
     public function attack(Game $game, Point $point)
     {
-        $status = $this->getOpponentBoard($game)->attack($point);
+        $attack = $this->getOpponentBoard($game)->attack($point);
 
-        return $status;
+        if ($attack) {
+            $game->saveAttack($this->sessionId, $point);
+        }
+
+        return $attack;
     }
-
-
-
-
 }

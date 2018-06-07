@@ -26,7 +26,13 @@ class BoardController extends Controller
         return response()->json(['ship'=>$ship->getCoordinates(),'board' => $board->getBoard()]);
     }
 
-    public function attack(Game $game,Point $point, GameService $service)
+    /**
+     * @param Game $game
+     * @param Point $point
+     * @param GameService $service
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function attack(Game $game, Point $point, GameService $service)
     {
         $attack = $service->attack($game,$point);
 

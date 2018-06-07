@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-use App\Services\DTO\Ship;
 use Illuminate\Database\Eloquent\Model;
 
 
 class Move extends Model
 {
-    //
+
     public function getX()
     {
         return $this->x;
