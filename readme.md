@@ -1,7 +1,9 @@
 ## Battleship API
 
-You can see simple **[demo](http://playinpoker.ml)**.
-Responses you can see in log area.
+You can see simple **[demo](http://playinpoker.ml)**. You can create a new game 
+and share game's ID with other user that can join and play with you.
+
+API Responses you can see in log area.
 
 ## Structure
 
