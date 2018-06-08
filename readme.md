@@ -3,7 +3,14 @@
 You can see simple **[demo](http://playinpoker.ml)**. You can create a new game 
 and share game's ID with other user that can join and play with you.
 
+**Simple interface manual:**
+- `Start new Game` - create new game, shows game id.
+- `Add Ship` - click on your board for x,y start position, select `size` and `direction`.
+- `Join` - set Game Id and press Join button.
+- For attacking - just click on opponent's board.
+
 API Responses you can see in log area.
+
 
 ## Structure
 
