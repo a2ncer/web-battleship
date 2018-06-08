@@ -150,7 +150,7 @@ class Game extends Model
     public function saveAttack($sessionId, Point $point)
     {
         /** @var Move $move */
-        $move = $this->getMoves($sessionId)->get()->last();
+        $move = $this->getMoves()->where('event',MoveType::ATTACK)->get()->last();
         $opponent = $this->getReversedSenderType($sessionId);
 
         if($move) {
@@ -164,8 +164,15 @@ class Game extends Model
             }
 
         }
-        else {
-            throw new Exception("Can't attack - no moves found");
+        else
+        {
+            if($this->getOwnerSessionId() === $sessionId) {
+
+                $this->saveMove(MoveType::ATTACK, $sessionId, $point);
+            }
+            else {
+                throw new Exception("Can't attack, owner goes first");
+            }
         }
     }
 

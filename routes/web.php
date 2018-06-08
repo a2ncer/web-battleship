@@ -12,5 +12,8 @@
 */
 
 Route::get('/', function () {
-    return view('welcome');
+
+    $dimension = 10;
+
+    return view('welcome',compact("dimension"));
 });

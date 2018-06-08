@@ -80,15 +80,16 @@ class Board
             return CellType::HIT;
         }
 
-        if ($value === 0 && $event === MoveType::ATTACK) {
+        if ($value === CellType::FREE && $event === MoveType::ATTACK) {
             return CellType::MISS;
         }
 
-        if ($value === 0 && $event === MoveType::ADD_SHIP) {
+        if ($value === CellType::FREE && $event === MoveType::ADD_SHIP) {
             return CellType::SHIP;
         }
 
-        throw new Exception('Map recreate error');
+        throw new Exception("Couldn't make this action");
+
     }
 
     /**
@@ -105,14 +106,23 @@ class Board
             $value = $this->board[$y][$x];
             $status = $this->convertEventToCell($value, MoveType::ATTACK);
 
+
             $this->board[$y][$x] = $status;
 
             if ($status === CellType::HIT) {
                 return true;
             }
-        }
 
-        return false;
+            if ($status === CellType::MISS) {
+                return false;
+            }
+
+
+            throw new Exception("You have already try this cell");
+
+        } else throw new Exception("Out of range");
+
+
     }
 
     /**
@@ -167,5 +177,17 @@ class Board
         }
 
         return $result;
+    }
+
+    public function withOutShips()
+    {
+        return array_map(function ($y) {
+            return array_map(function ($x) {
+                return $x === CellType::SHIP ? CellType::FREE : $x;
+            },$y);
+
+        }, $this->board);
+
+
     }
 }

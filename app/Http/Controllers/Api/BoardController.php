@@ -39,4 +39,6 @@ class BoardController extends Controller
         return response()->json(["status"=>$attack]);
 
     }
+
+
 }

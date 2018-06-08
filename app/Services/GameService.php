@@ -74,8 +74,10 @@ class GameService
         $reversedSenderType = $game->getReversedSenderType($this->sessionId);
 
         $moves = $game->getMoves()
-            ->where([['event', '=', MoveType::ADD_SHIP], ['sender', '=', $senderType]])
-            ->orWhere([['event', '=', MoveType::ATTACK], ['sender', '=', $reversedSenderType]])
+            ->where(function ($query) use ($senderType, $reversedSenderType) {
+                $query->where([['event', '=', MoveType::ADD_SHIP], ['sender', '=', $senderType]])
+                    ->orWhere([['event', '=', MoveType::ATTACK], ['sender', '=', $reversedSenderType]]);
+            })
             ->get();
 
         return (new Board())->map($moves);
@@ -93,8 +95,10 @@ class GameService
         $reversedSenderType = $game->getReversedSenderType($this->sessionId);
 
         $moves = $game->getMoves()
-            ->where([['event', '=', MoveType::ADD_SHIP], ['sender', '=', $reversedSenderType]])
-            ->orWhere([['event', '=', MoveType::ATTACK], ['sender', '=', $senderType]])
+            ->where(function ($query) use ($senderType, $reversedSenderType) {
+                $query->where([['event', '=', MoveType::ADD_SHIP], ['sender', '=', $reversedSenderType]])
+                    ->orWhere([['event', '=', MoveType::ATTACK], ['sender', '=', $senderType]]);
+            })
             ->get();
 
         return (new Board())->map($moves);
@@ -116,7 +120,7 @@ class GameService
     }
 
     /**
-     * @param Game  $game
+     * @param Game $game
      * @param Point $point
      *
      * @return bool
@@ -125,10 +129,17 @@ class GameService
     {
         $attack = $this->getOpponentBoard($game)->attack($point);
 
-        if ($attack) {
-            $game->saveAttack($this->sessionId, $point);
-        }
+        $game->saveAttack($this->sessionId, $point);
 
         return $attack;
+    }
+
+    public function getUpdates(Game $game)
+    {
+        $board = $this->getSessionBoard($game);
+
+        $opponentBoard = $this->getOpponentBoard($game)->withOutShips();
+
+        return ["board"=>$board->getBoard(), "opponentBoard"=>$opponentBoard];
     }
 }

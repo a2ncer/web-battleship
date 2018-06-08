@@ -20,17 +20,20 @@ Route::middleware('api')->get('/session', function (Request $request) {
 Route::group(['prefix' => 'game'], function () {
 
 
+
     Route::get('/{game}', 'GameController@show');
 
     Route::post('/create', 'GameController@create');
 
     Route::patch('/{game}/join', 'GameController@join');
 
-    //Route::get('/{game}/updates', 'GameController@show');
+    Route::get('/{game}/updates', 'GameController@getUpdates');
+
 
     Route::post('/{game}/board/addShip', 'BoardController@addShip');
 
     Route::post('/{game}/board/attack', 'BoardController@attack');
+
 
 
 });

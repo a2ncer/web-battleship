@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Exception;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
 class Handler extends ExceptionHandler
@@ -50,6 +51,7 @@ class Handler extends ExceptionHandler
     public function render($request, Exception $exception)
     {
         //parent::render($request, $exception);
-        return response()->json(["error"=>$exception->getMessage()]);
+        return response()
+            ->json(["error"=>$exception->getMessage()],Response::HTTP_CONFLICT);
     }
 }
