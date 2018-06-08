@@ -30,8 +30,13 @@ into boards.
 
 **What is not completed:**
 - Create a random board with the ships already placed.
+- Request validation
+- Filters for ship creation
 - Notification via WebSockets (Redis - as broadcast server and nodejs - WebSocket server)
 - UnitTests
+
+## API Description
+
 
 ### Create new game
 **POST**   /api/game/create
