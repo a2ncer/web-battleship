@@ -7,6 +7,7 @@ use App\Services\DTO\Board;
 use App\Services\DTO\Point;
 use App\Services\DTO\Ship;
 use App\Services\Enums\MoveType;
+use App\Services\Enums\SenderType;
 
 class GameService
 {
@@ -53,7 +54,7 @@ class GameService
             return true;
         }
 
-        if ($game->getOpponentSessionId() === null && $game->getOpponentSessionId() !== $this->sessionId) {
+        if ($game->getOpponentSessionId() === null && $game->getOwnerSessionId() !== $this->sessionId) {
             $game->setOpponentSessionId($this->sessionId);
 
             return $game->update();
@@ -134,12 +135,35 @@ class GameService
         return $attack;
     }
 
+    /**
+     * @param Board $board
+     * @param Board $opponentBoard
+     * @return null|string
+     */
+    public function getWinner(Board $board, Board $opponentBoard)
+    {
+        $winner = null;
+
+        if($board->isEmptyBoard() || $opponentBoard->isEmptyBoard())
+            return $winner;
+
+        if(!$board->hasShips())
+            $winner = SenderType::OPPONENT;
+
+        if(!$opponentBoard->hasShips())
+            $winner = SenderType::OWNER;
+
+        return $winner;
+    }
+
     public function getUpdates(Game $game)
     {
         $board = $this->getSessionBoard($game);
 
-        $opponentBoard = $this->getOpponentBoard($game)->withOutShips();
+        $opponentBoard = $this->getOpponentBoard($game);
 
-        return ["board"=>$board->getBoard(), "opponentBoard"=>$opponentBoard];
+        $winner = $this->getWinner($board,$opponentBoard);
+
+        return ["winner"=>$winner,"board"=>$board->getBoard(), "opponentBoard"=>$opponentBoard->withOutShips()];
     }
 }

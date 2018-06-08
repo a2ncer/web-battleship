@@ -46,7 +46,7 @@ class GameController extends Controller
     {
         $status = $service->joinGame($game);
 
-        return response()->json(['joined' => $status, 'game' => $game]);
+        return response()->json(['joined' => $status, 'game' => ["id"=>$game->getId()]]);
     }
 
     public function getUpdates(Game $game, GameService $service)

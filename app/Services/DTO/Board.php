@@ -174,6 +174,7 @@ class Board
             if (isset($this->board[$y][$x]) && $this->board[$y][$x] === CellType::FREE) {
                 $result[$y][$x] = CellType::SHIP;
             }
+            else throw new Exception("Cell is out of range or not free");
         }
 
         return $result;
@@ -187,7 +188,29 @@ class Board
             },$y);
 
         }, $this->board);
+    }
 
+    public function hasShips()
+    {
+        for ($y = 0; $y < $this->dimension; ++$y) {
+            for ($x = 0; $x < $this->dimension; ++$x) {
+                if($this->board[$y][$x] === CellType::SHIP)
+                    return true;
+            }
+        }
 
+        return false;
+    }
+
+    public function isEmptyBoard()
+    {
+        for ($y = 0; $y < $this->dimension; ++$y) {
+            for ($x = 0; $x < $this->dimension; ++$x) {
+                if($this->board[$y][$x] !== CellType::FREE)
+                    return false;
+            }
+        }
+
+        return true;
     }
 }
