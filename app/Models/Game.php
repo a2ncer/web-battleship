@@ -12,6 +12,12 @@ use Mockery\Exception;
 class Game extends Model
 {
 
+    protected $hidden = ["owner_session_id","opponent_session_id"];
+
+
+    /**
+     * @return mixed
+     */
     public function getId()
     {
         return $this->id;

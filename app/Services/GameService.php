@@ -156,6 +156,10 @@ class GameService
         return $winner;
     }
 
+    /**
+     * @param Game $game
+     * @return array
+     */
     public function getUpdates(Game $game)
     {
         $board = $this->getSessionBoard($game);

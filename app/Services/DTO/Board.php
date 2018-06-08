@@ -24,6 +24,8 @@ class Board
     }
 
     /**
+     * Creates empty board.
+     *
      * @return array
      */
     private function getClearBoard()
@@ -40,6 +42,8 @@ class Board
     }
 
     /**
+     * Returns current board.
+     *
      * @return array
      */
     public function getBoard()
@@ -48,6 +52,8 @@ class Board
     }
 
     /**
+     * Mapping moves to board.
+     *
      * @param Collection $moves
      *
      * @return $this
@@ -69,6 +75,8 @@ class Board
     }
 
     /**
+     * Converts cell to correct value according to event.
+     *
      * @param $value
      * @param $event
      *
@@ -89,10 +97,11 @@ class Board
         }
 
         throw new Exception("Couldn't make this action");
-
     }
 
     /**
+     * Try make an attack on board.
+     *
      * @param Point $point
      *
      * @return bool
@@ -106,7 +115,6 @@ class Board
             $value = $this->board[$y][$x];
             $status = $this->convertEventToCell($value, MoveType::ATTACK);
 
-
             $this->board[$y][$x] = $status;
 
             if ($status === CellType::HIT) {
@@ -117,15 +125,15 @@ class Board
                 return false;
             }
 
-
-            throw new Exception("You have already try this cell");
-
-        } else throw new Exception("Out of range");
-
-
+            throw new Exception('You have already try this cell');
+        } else {
+            throw new Exception('Out of range');
+        }
     }
 
     /**
+     * Add a ship on board.
+     *
      * @param Ship $ship
      *
      * @return $this
@@ -152,6 +160,8 @@ class Board
     }
 
     /**
+     * Try to add ship on board.
+     *
      * @param Ship $ship
      *
      * @return array|bool
@@ -173,41 +183,58 @@ class Board
 
             if (isset($this->board[$y][$x]) && $this->board[$y][$x] === CellType::FREE) {
                 $result[$y][$x] = CellType::SHIP;
+            } else {
+                throw new Exception('Cell is out of range or not free');
             }
-            else throw new Exception("Cell is out of range or not free");
         }
 
         return $result;
     }
 
+    /**
+     * Returns board without ships.
+     *
+     * @return array
+     */
     public function withOutShips()
     {
         return array_map(function ($y) {
             return array_map(function ($x) {
                 return $x === CellType::SHIP ? CellType::FREE : $x;
-            },$y);
-
+            }, $y);
         }, $this->board);
     }
 
+    /**
+     * Check any ships on board.
+     *
+     * @return bool
+     */
     public function hasShips()
     {
         for ($y = 0; $y < $this->dimension; ++$y) {
             for ($x = 0; $x < $this->dimension; ++$x) {
-                if($this->board[$y][$x] === CellType::SHIP)
+                if ($this->board[$y][$x] === CellType::SHIP) {
                     return true;
+                }
             }
         }
 
         return false;
     }
 
+    /**
+     * Check if board is board.
+     *
+     * @return bool
+     */
     public function isEmptyBoard()
     {
         for ($y = 0; $y < $this->dimension; ++$y) {
             for ($x = 0; $x < $this->dimension; ++$x) {
-                if($this->board[$y][$x] !== CellType::FREE)
+                if ($this->board[$y][$x] !== CellType::FREE) {
                     return false;
+                }
             }
         }
 

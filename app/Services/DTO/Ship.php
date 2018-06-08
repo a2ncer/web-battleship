@@ -13,6 +13,8 @@ class Ship
     private $coordinates;
 
     /**
+     * Mapping request to Ship.
+     *
      * @param Request $request
      *
      * @return $this
@@ -28,7 +30,9 @@ class Ship
         return $this;
     }
 
-
+    /**
+     * Generates coordinates of ship according to startX,startY,size and direction.
+     */
     private function generateCoordinates()
     {
         if ($this->getDirection() === 'up') {
