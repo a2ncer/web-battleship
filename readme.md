@@ -1,7 +1,6 @@
 ## Battleship API
 
-You can see simple **[demo](http://playinpoker.ml)**. You can create a new game 
-and share game's ID with other user that can join and play with you.
+You can create a new game and share game's ID with other user that can join and play with you.
 
 **Simple interface manual:**
 - `Start new Game` - create new game, shows game id.
